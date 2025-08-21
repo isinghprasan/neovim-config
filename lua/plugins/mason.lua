@@ -1,24 +1,43 @@
+-- ~/.config/nvim/lua/plugins/mason.lua
 return {
+  -- Core Mason
   {
     "williamboman/mason.nvim",
     config = function()
       require("mason").setup()
-      -- Add Mason's bin dir to PATH so nvim can find installed tools
-      local mason_bin = vim.fn.stdpath("data") .. "/mason/bin"
-      if not string.find(vim.env.PATH or "", mason_bin, 1, true) then
-        vim.env.PATH = mason_bin .. ":" .. (vim.env.PATH or "")
+      local bin = vim.fn.stdpath("data") .. "/mason/bin"
+      if not (vim.env.PATH or ""):find(bin, 1, true) then
+        vim.env.PATH = bin .. ":" .. (vim.env.PATH or "")
       end
     end,
   },
+
+  -- LSP servers only
   {
     "williamboman/mason-lspconfig.nvim",
     dependencies = { "williamboman/mason.nvim" },
     opts = {
-      -- Both are LSP servers via lspconfig:
-      --   terraformls → full Terraform language server
-      --   tflint     → runs TFLint as an LSP (diagnostics, etc.)
-      ensure_installed = { "terraformls", "tflint" },
+      ensure_installed = {
+        "gopls",
+        "terraformls",
+        "tflint",      -- ok here: there is an lspconfig server named "tflint"
+      },
       automatic_installation = true,
+    },
+  },
+
+  -- CLI tools (non-LSP) like golangci-lint
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    dependencies = { "williamboman/mason.nvim" },
+    opts = {
+      ensure_installed = {
+        "golangci-lint",  -- ← belongs here, not in mason-lspconfig
+        "tflint",         -- keep here too so the binary exists for its LSP / nvim-lint
+      },
+      run_on_start = true,
+      start_delay = 3000,
+      debounce_hours = 24,
     },
   },
 }
